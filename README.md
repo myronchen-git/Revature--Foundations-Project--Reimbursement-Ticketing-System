@@ -1,4 +1,4 @@
-# Revature--Foundations-Project--Reimbursement-Ticketing-System
+# Reimbursement Ticketing System
 
 A ticketing system for employees to add reimbursement requests, and then for managers to view pending requests and
 either approve or deny them.
