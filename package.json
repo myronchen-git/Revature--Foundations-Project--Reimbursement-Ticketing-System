@@ -1,0 +1,33 @@
+{
+  "name": "project-1--reimbursement-ticketing-system",
+  "version": "1.0.0",
+  "description": "A ticketing system for employees to add reimbursement requests, and then for managers to view pending requests and either approve or deny them.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node ./src/app.js",
+    "test": "jest"
+  },
+  "author": "Myron Chen",
+  "license": "ISC",
+  "jest": {
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "<rootDir>/**.js"
+    ],
+    "coveragePathIgnorePatterns": [
+      "<rootDir>/coverage/"
+    ],
+    "clearMocks": true
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.518.0",
+    "@aws-sdk/lib-dynamodb": "^3.518.0",
+    "bcrypt": "^5.1.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "winston": "^3.11.0"
+  }
+}
