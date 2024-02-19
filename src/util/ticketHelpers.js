@@ -11,8 +11,8 @@ const ArgumentError = require("../errors/ArgumentError");
  * @param {Object} submittedTicketInfo Submitted user and ticket info: {username, role, type, amount, description}.
  * @returns A new Object that is ready to be placed into the database: {username, role, type, amount, description}.
  */
-function validateTicketInputs(submittedTicketInfo) {
-  logger.info(`ticketHelpers.validateTicketInputs(${JSON.stringify(submittedTicketInfo)})`);
+function validateNewTicketInputs(submittedTicketInfo) {
+  logger.info(`ticketHelpers.validateNewTicketInputs(${JSON.stringify(submittedTicketInfo)})`);
 
   let { username, role, type, amount, description } = submittedTicketInfo;
 
@@ -23,14 +23,14 @@ function validateTicketInputs(submittedTicketInfo) {
     const SANITIZED_SUBMITTED_TICKET_INFO = { username, role, type, amount, description };
 
     logger.info(
-      `ticketHelpers.validateTicketInputs: Sanitized submitted ticket info is ${JSON.stringify(
+      `ticketHelpers.validateNewTicketInputs: Sanitized submitted ticket info is ${JSON.stringify(
         SANITIZED_SUBMITTED_TICKET_INFO
       )}.`
     );
     return SANITIZED_SUBMITTED_TICKET_INFO;
   } else {
     logger.error(
-      `ticketHelpers.validateTicketInputs: Invalid request body parameters in ${JSON.stringify(
+      `ticketHelpers.validateNewTicketInputs: Invalid request body parameters in ${JSON.stringify(
         submittedTicketInfo
       )}`
     );
@@ -54,9 +54,61 @@ function sanitizeMoney(amount) {
   return NEW_AMOUNT;
 }
 
+/**
+ * Sanitizes, formats, and validates the info for getting tickets.  Query parameters are optional.
+ *
+ * @param {Object} req Request Object with user info in the body and query parameters:
+ * {body: {username, role}, query: {status, type, submitter}}.
+ * @returns A new Object to be used to query tickets from the database {username, role, status, type, submitter}.
+ */
+function validateGetTicketsInputs(req) {
+  logger.info(
+    `ticketHelpers.validateGetTicketsInputs({` +
+      `body: ${JSON.stringify(req.body)}, ` +
+      `query: ${JSON.stringify(req.query)}` +
+      `})`
+  );
+
+  let { username, role } = req.body;
+  let { status, type, submitter } = req.query;
+
+  if (username && role && ROLES.has(role)) {
+    const SANITIZED_GET_TICKETS_INFO = { username, role };
+
+    if (submitter) {
+      SANITIZED_GET_TICKETS_INFO.submitter = String(submitter);
+    }
+
+    if (status) {
+      SANITIZED_GET_TICKETS_INFO.status = String(status);
+    }
+
+    if (type) {
+      SANITIZED_GET_TICKETS_INFO.type = String(type);
+    }
+
+    logger.info(
+      `ticketHelpers.validateGetTicketsInputs: Sanitized get-tickets info is ${JSON.stringify(
+        SANITIZED_GET_TICKETS_INFO
+      )}.`
+    );
+    return SANITIZED_GET_TICKETS_INFO;
+  } else {
+    logger.error(
+      `ticketHelpers.validateGetTicketsInputs: Invalid request parameters in {` +
+        `body: ${JSON.stringify(req.body)}, ` +
+        `query: ${JSON.stringify(req.query)}` +
+        `}`
+    );
+
+    throw new ArgumentError("Invalid request parameters for getting tickets.");
+  }
+}
+
 // ==================================================
 
 module.exports = {
-  validateTicketInputs,
+  validateNewTicketInputs,
   sanitizeMoney,
+  validateGetTicketsInputs,
 };

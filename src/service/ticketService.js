@@ -45,8 +45,43 @@ async function submitTicket(submittedTicketInfo) {
   }
 }
 
+/**
+ * Processes and sets the properties to be used to call the database, calls the DAO,
+ * and returns a list of tickets that satisfies the query options chosen.
+ *
+ * @param {Object} getTicketsInfo Object containing query parameters and user info
+ * {username, role, status, type, submitter}.
+ * @returns List of tickets.
+ */
+async function retrieveTickets(getTicketsInfo) {
+  logger.info(`ticketService.retrieveTickets(${JSON.stringify(getTicketsInfo)})`);
+
+  let submitter = getTicketsInfo.submitter;
+  if (getTicketsInfo.role === "employee") {
+    submitter = getTicketsInfo.username;
+  }
+
+  let props = Object.keys(getTicketsInfo).reduce((props, infoKey) => {
+    if (infoKey.toLowerCase() !== "username" && infoKey.toLowerCase() !== "role") {
+      props[infoKey] = getTicketsInfo[infoKey];
+    }
+    return props;
+  }, {});
+  if (submitter) {
+    props = { ...props, submitter };
+  }
+
+  const RETRIEVED_TICKETS = await ticketDao.getTickets(props);
+
+  logger.info(
+    `ticketService.retrieveTickets: Tickets retrieved:\n${JSON.stringify(RETRIEVED_TICKETS)}.`
+  );
+  return RETRIEVED_TICKETS;
+}
+
 // ==================================================
 
 module.exports = {
   submitTicket,
+  retrieveTickets,
 };

@@ -3,7 +3,7 @@ const express = require("express");
 
 const ticketService = require("../service/ticketService");
 const { authenticateTokenMiddleware } = require("../util/accountHelpers");
-const { validateTicketInputs } = require("../util/ticketHelpers");
+const { validateNewTicketInputs, validateGetTicketsInputs } = require("../util/ticketHelpers");
 const AuthorizationError = require("../errors/AuthorizationError");
 
 const router = express.Router();
@@ -29,11 +29,32 @@ router.post("/", authenticateTokenMiddleware, validationMiddleware, async (req, 
 });
 
 /**
- * Validates user inputs for new ticket.
+ * Get tickets
+ */
+router.get("/", authenticateTokenMiddleware, validationMiddleware, async (req, res) => {
+  try {
+    const TICKETS = await ticketService.retrieveTickets(req.body);
+
+    res.status(200).json({ message: `Tickets successfully retrieved.`, tickets: TICKETS });
+  } catch (err) {
+    logger.error(`ticketRouter -> /: Internal Server Error\n${err}`);
+    res.status(500).json({ message: "Server error." });
+  }
+});
+
+// --------------------------------------------------
+
+/**
+ * Validates user inputs.
  */
 function validationMiddleware(req, res, next) {
   try {
-    req.body = validateTicketInputs(req.body);
+    if (req.method === "POST") {
+      req.body = validateNewTicketInputs(req.body);
+    } else if (req.method === "GET") {
+      req.body = validateGetTicketsInputs(req);
+    }
+
     next();
   } catch (err) {
     logger.error(`ticketRouter.validationMiddleware: Validation failed.`);

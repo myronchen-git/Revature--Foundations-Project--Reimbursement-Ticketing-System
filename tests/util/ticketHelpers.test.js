@@ -1,4 +1,8 @@
-const { validateTicketInputs, sanitizeMoney } = require("../../src/util/ticketHelpers");
+const {
+  validateNewTicketInputs,
+  sanitizeMoney,
+  validateGetTicketsInputs,
+} = require("../../src/util/ticketHelpers");
 const ArgumentError = require("../../src/errors/ArgumentError");
 
 // --------------------------------------------------
@@ -8,10 +12,12 @@ const ROLE = "employee";
 const TYPE = "meal";
 const AMOUNT = 100.01;
 const DESCRIPTION = "A description.";
+const STATUS = "pending";
+const SUBMITTER = "user1";
 
 // ==================================================
 
-describe("validateTicketInputs", () => {
+describe("validateNewTicketInputs", () => {
   test("Giving all valid submitted ticket info should return the same info.", () => {
     const REQUEST_BODY = {
       username: UN,
@@ -28,7 +34,7 @@ describe("validateTicketInputs", () => {
       description: DESCRIPTION,
     };
 
-    const RESULT = validateTicketInputs(REQUEST_BODY);
+    const RESULT = validateNewTicketInputs(REQUEST_BODY);
 
     expect(RESULT).toStrictEqual(EXPECTED_RESULT);
   });
@@ -65,7 +71,7 @@ describe("validateTicketInputs", () => {
     "Giving a missing property for submitted ticket info should throw an error.",
     (requestBody) => {
       function runFunc() {
-        validateTicketInputs(requestBody);
+        validateNewTicketInputs(requestBody);
       }
 
       expect(runFunc).toThrow(ArgumentError);
@@ -108,7 +114,7 @@ describe("validateTicketInputs", () => {
     "Giving an empty String for username for submitted ticket info should throw an error.",
     (requestBody) => {
       function runFunc() {
-        validateTicketInputs(requestBody);
+        validateNewTicketInputs(requestBody);
       }
 
       expect(runFunc).toThrow(ArgumentError);
@@ -125,7 +131,7 @@ describe("validateTicketInputs", () => {
     };
 
     function runFunc() {
-      validateTicketInputs(REQUEST_BODY);
+      validateNewTicketInputs(REQUEST_BODY);
     }
 
     expect(runFunc).toThrow(ArgumentError);
@@ -158,7 +164,7 @@ describe("validateTicketInputs", () => {
         description: DESCRIPTION,
       };
 
-      const RESULT = validateTicketInputs(requestBody);
+      const RESULT = validateNewTicketInputs(requestBody);
 
       expect(RESULT).toStrictEqual(EXPECTED_RESULT);
     }
@@ -185,7 +191,7 @@ describe("validateTicketInputs", () => {
     "Giving an amount <= 0 should throw an error.  Amount is $amount.",
     (requestBody) => {
       function runFunc() {
-        validateTicketInputs(requestBody);
+        validateNewTicketInputs(requestBody);
       }
 
       expect(runFunc).toThrow(ArgumentError);
@@ -229,5 +235,194 @@ describe("sanitizeMoney", () => {
     const RESULT = sanitizeMoney(AMOUNT);
 
     expect(RESULT).toBe(EXPECTED_AMOUNT);
+  });
+});
+
+// --------------------------------------------------
+
+describe("validateGetTicketsInputs", () => {
+  let data = [
+    {
+      input: {
+        body: {
+          username: UN,
+          role: ROLE,
+        },
+        query: {
+          status: STATUS,
+          type: TYPE,
+          submitter: SUBMITTER,
+        },
+      },
+      expectedResult: {
+        username: UN,
+        role: ROLE,
+        status: STATUS,
+        type: TYPE,
+        submitter: SUBMITTER,
+      },
+    },
+    {
+      input: {
+        body: {
+          username: UN,
+          role: ROLE,
+        },
+        query: {
+          status: STATUS,
+        },
+      },
+      expectedResult: {
+        username: UN,
+        role: ROLE,
+        status: STATUS,
+      },
+    },
+    {
+      input: {
+        body: {
+          username: UN,
+          role: ROLE,
+        },
+        query: {
+          type: TYPE,
+        },
+      },
+      expectedResult: {
+        username: UN,
+        role: ROLE,
+        type: TYPE,
+      },
+    },
+    {
+      input: {
+        body: {
+          username: UN,
+          role: ROLE,
+        },
+        query: {
+          submitter: SUBMITTER,
+        },
+      },
+      expectedResult: {
+        username: UN,
+        role: ROLE,
+        submitter: SUBMITTER,
+      },
+    },
+    {
+      input: {
+        body: {
+          username: UN,
+          role: ROLE,
+        },
+        query: {
+          status: STATUS,
+          type: TYPE,
+        },
+      },
+      expectedResult: {
+        username: UN,
+        role: ROLE,
+        status: STATUS,
+        type: TYPE,
+      },
+    },
+  ];
+
+  test.each(data)("Giving all valid info for getting tickets should return the same info.", (d) => {
+    const RESULT = validateGetTicketsInputs(d.input);
+
+    expect(RESULT).toStrictEqual(d.expectedResult);
+  });
+
+  let requests = [
+    {
+      body: {
+        role: ROLE,
+      },
+      query: {
+        status: STATUS,
+        type: TYPE,
+        submitter: SUBMITTER,
+      },
+    },
+    {
+      body: {
+        username: UN,
+      },
+      query: {
+        status: STATUS,
+        type: TYPE,
+        submitter: SUBMITTER,
+      },
+    },
+  ];
+
+  test.each(requests)(
+    "Giving a missing necessary property in info for getting tickets should throw an error.",
+    (request) => {
+      function runFunc() {
+        validateGetTicketsInputs(request);
+      }
+
+      expect(runFunc).toThrow(ArgumentError);
+    }
+  );
+
+  requests = [
+    {
+      body: {
+        username: "",
+        role: ROLE,
+      },
+      query: {
+        status: STATUS,
+        type: TYPE,
+        submitter: SUBMITTER,
+      },
+    },
+    {
+      body: {
+        username: UN,
+        role: "",
+      },
+      query: {
+        status: STATUS,
+        type: TYPE,
+        submitter: SUBMITTER,
+      },
+    },
+  ];
+
+  test.each(requests)(
+    "Giving an empty String for a necessary property in info for getting tickets should throw an error.",
+    (request) => {
+      function runFunc() {
+        validateGetTicketsInputs(request);
+      }
+
+      expect(runFunc).toThrow(ArgumentError);
+    }
+  );
+
+  test("Giving an unidentifiable role for when getting tickets should throw an error.", () => {
+    const REQUEST = {
+      body: {
+        username: UN,
+        role: "CEO",
+      },
+      query: {
+        status: STATUS,
+        type: TYPE,
+        submitter: SUBMITTER,
+      },
+    };
+
+    function runFunc() {
+      validateGetTicketsInputs(REQUEST);
+    }
+
+    expect(runFunc).toThrow(ArgumentError);
   });
 });
