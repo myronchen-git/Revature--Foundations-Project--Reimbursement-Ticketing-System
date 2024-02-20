@@ -1,7 +1,22 @@
+const mockedSanitizeUsername = jest.fn((username) => {
+  if (username === UN) {
+    return UN;
+  } else {
+    throw new ArgumentError();
+  }
+});
+
+jest.mock("../../src/util/accountHelpers.js", () => ({
+  ...jest.requireActual("../../src/util/accountHelpers.js"),
+  sanitizeUsername: mockedSanitizeUsername,
+}));
+
 const {
   validateNewTicketInputs,
-  sanitizeMoney,
   validateGetTicketsInputs,
+  validateProcessTicketInputs,
+  sanitizeMoney,
+  sanitizeTimestamp,
 } = require("../../src/util/ticketHelpers");
 const ArgumentError = require("../../src/errors/ArgumentError");
 
@@ -14,6 +29,7 @@ const AMOUNT = 100.01;
 const DESCRIPTION = "A description.";
 const STATUS = "pending";
 const SUBMITTER = "user1";
+const TIMESTAMP = 1708892499431;
 
 // ==================================================
 
@@ -201,45 +217,6 @@ describe("validateNewTicketInputs", () => {
 
 // --------------------------------------------------
 
-describe("sanitizeMoney", () => {
-  test("Giving whole numbers should return the same number.", () => {
-    const AMOUNT = 739928;
-
-    const RESULT = sanitizeMoney(AMOUNT);
-
-    expect(RESULT).toBe(AMOUNT);
-  });
-
-  test("Giving decimal amounts should return a number rounded to 2 decimals.", () => {
-    const AMOUNT = 888.8888;
-    const EXPECTED_AMOUNT = 888.89;
-
-    const RESULT = sanitizeMoney(AMOUNT);
-
-    expect(RESULT).toBe(EXPECTED_AMOUNT);
-  });
-
-  test("Giving undefined should return 0.", () => {
-    const AMOUNT = undefined;
-    const EXPECTED_AMOUNT = 0;
-
-    const RESULT = sanitizeMoney(AMOUNT);
-
-    expect(RESULT).toBe(EXPECTED_AMOUNT);
-  });
-
-  test("Giving a non-number should return 0.", () => {
-    const AMOUNT = "abc";
-    const EXPECTED_AMOUNT = 0;
-
-    const RESULT = sanitizeMoney(AMOUNT);
-
-    expect(RESULT).toBe(EXPECTED_AMOUNT);
-  });
-});
-
-// --------------------------------------------------
-
 describe("validateGetTicketsInputs", () => {
   let data = [
     {
@@ -421,6 +398,296 @@ describe("validateGetTicketsInputs", () => {
 
     function runFunc() {
       validateGetTicketsInputs(REQUEST);
+    }
+
+    expect(runFunc).toThrow(ArgumentError);
+  });
+});
+
+// --------------------------------------------------
+
+describe("sanitizeMoney", () => {
+  test("Giving whole numbers should return the same number.", () => {
+    const AMOUNT = 739928;
+
+    const RESULT = sanitizeMoney(AMOUNT);
+
+    expect(RESULT).toBe(AMOUNT);
+  });
+
+  test("Giving decimal amounts should return a number rounded to 2 decimals.", () => {
+    const AMOUNT = 888.8888;
+    const EXPECTED_AMOUNT = 888.89;
+
+    const RESULT = sanitizeMoney(AMOUNT);
+
+    expect(RESULT).toBe(EXPECTED_AMOUNT);
+  });
+
+  test("Giving undefined should return 0.", () => {
+    const AMOUNT = undefined;
+    const EXPECTED_AMOUNT = 0;
+
+    const RESULT = sanitizeMoney(AMOUNT);
+
+    expect(RESULT).toBe(EXPECTED_AMOUNT);
+  });
+
+  test("Giving a non-number should return 0.", () => {
+    const AMOUNT = "abc";
+    const EXPECTED_AMOUNT = 0;
+
+    const RESULT = sanitizeMoney(AMOUNT);
+
+    expect(RESULT).toBe(EXPECTED_AMOUNT);
+  });
+});
+
+// --------------------------------------------------
+
+describe("sanitizeTimestamp", () => {
+  test("Giving a valid timestamp should return the same timestamp and in a Number data type.", () => {
+    const TIMESTAMP = Date.now() - 1000000;
+
+    const RESULT = sanitizeTimestamp(TIMESTAMP);
+
+    expect(RESULT).toBe(TIMESTAMP);
+  });
+
+  test("Giving a timestamp that is negative should throw an error.", () => {
+    const TIMESTAMP = -2991028;
+
+    function runFunc() {
+      sanitizeTimestamp(TIMESTAMP);
+    }
+
+    expect(runFunc).toThrow(ArgumentError);
+  });
+
+  test("Giving a timestamp of zero should throw an error.", () => {
+    const TIMESTAMP = 0;
+
+    function runFunc() {
+      sanitizeTimestamp(TIMESTAMP);
+    }
+
+    expect(runFunc).toThrow(ArgumentError);
+  });
+
+  test("Giving a timestamp that is in the future should throw an error.", () => {
+    const TIMESTAMP = Date.now() + 1000000000;
+
+    function runFunc() {
+      sanitizeTimestamp(TIMESTAMP);
+    }
+
+    expect(runFunc).toThrow(ArgumentError);
+  });
+
+  let timestamps = ["abc", false, true, null, undefined, { timestamp: 9999999 }, [8888888, 77777]];
+  test.each(timestamps)(
+    "Giving a non-integer timestamp of %s should throw an error.",
+    (timestamp) => {
+      function runFunc() {
+        sanitizeTimestamp(timestamp);
+      }
+
+      expect(runFunc).toThrow(ArgumentError);
+    }
+  );
+});
+
+// --------------------------------------------------
+
+describe("validateProcessTicketInputs", () => {
+  test("Giving all valid needed info for processing a ticket should an object", () => {
+    const REQUEST = {
+      body: { username: UN, role: ROLE, status: "denied" },
+      params: { submitter: SUBMITTER, timestamp: TIMESTAMP },
+    };
+    const EXPECTED_RESULT = {
+      username: UN,
+      role: ROLE,
+      submitter: SUBMITTER,
+      timestamp: TIMESTAMP,
+      status: "denied",
+    };
+
+    const RESULT = validateProcessTicketInputs(REQUEST);
+
+    expect(RESULT).toStrictEqual(EXPECTED_RESULT);
+    expect(mockedSanitizeUsername).toHaveBeenCalledTimes(1);
+    expect(mockedSanitizeUsername).toHaveBeenCalledWith(UN);
+  });
+
+  requests = [
+    {
+      body: {
+        role: ROLE,
+        status: STATUS,
+      },
+      params: {
+        timestamp: TIMESTAMP,
+        submitter: SUBMITTER,
+      },
+    },
+    {
+      body: {
+        username: UN,
+        status: STATUS,
+      },
+      params: {
+        timestamp: TIMESTAMP,
+        submitter: SUBMITTER,
+      },
+    },
+    {
+      body: {
+        username: UN,
+        role: ROLE,
+      },
+      params: {
+        timestamp: TIMESTAMP,
+        submitter: SUBMITTER,
+      },
+    },
+    {
+      body: {
+        username: UN,
+        role: ROLE,
+        status: STATUS,
+      },
+      params: {
+        submitter: SUBMITTER,
+      },
+    },
+    {
+      body: {
+        username: UN,
+        role: ROLE,
+        status: STATUS,
+      },
+      params: {
+        timestamp: TIMESTAMP,
+      },
+    },
+    {
+      body: {
+        username: "",
+        role: ROLE,
+        status: STATUS,
+      },
+      params: {
+        timestamp: TIMESTAMP,
+        submitter: SUBMITTER,
+      },
+    },
+    {
+      body: {
+        username: UN,
+        role: "",
+        status: STATUS,
+      },
+      params: {
+        timestamp: TIMESTAMP,
+        submitter: SUBMITTER,
+      },
+    },
+    {
+      body: {
+        username: UN,
+        role: ROLE,
+        status: "",
+      },
+      params: {
+        timestamp: TIMESTAMP,
+        submitter: SUBMITTER,
+      },
+    },
+    {
+      body: {
+        username: UN,
+        role: ROLE,
+        status: STATUS,
+      },
+      params: {
+        timestamp: "",
+        submitter: SUBMITTER,
+      },
+    },
+    {
+      body: {
+        username: UN,
+        role: ROLE,
+        status: STATUS,
+      },
+      params: {
+        timestamp: TIMESTAMP,
+        submitter: "",
+      },
+    },
+  ];
+
+  test.each(requests)("Giving a missing or empty parameter should throw an error.", (request) => {
+    function runFunc() {
+      validateProcessTicketInputs(request);
+    }
+
+    expect(runFunc).toThrow(ArgumentError);
+    expect(mockedSanitizeUsername).toHaveBeenCalledTimes(1);
+  });
+
+  requests = [
+    {
+      body: {
+        username: UN,
+        role: "admin",
+        status: STATUS,
+      },
+      params: {
+        timestamp: TIMESTAMP,
+        submitter: SUBMITTER,
+      },
+    },
+    {
+      body: {
+        username: UN,
+        role: ROLE,
+        status: "waiting",
+      },
+      params: {
+        timestamp: TIMESTAMP,
+        submitter: SUBMITTER,
+      },
+    },
+  ];
+
+  test.each(requests)(
+    "Giving a property with an unidentifiable value should throw an error.",
+    (request) => {
+      function runFunc() {
+        validateProcessTicketInputs(request);
+      }
+
+      expect(runFunc).toThrow(ArgumentError);
+    }
+  );
+
+  test("Giving a new status of pending should throw an error.", () => {
+    const REQUEST = {
+      body: {
+        username: UN,
+        role: ROLE,
+        status: "pending",
+      },
+      params: {
+        timestamp: TIMESTAMP,
+        submitter: SUBMITTER,
+      },
+    };
+
+    function runFunc() {
+      validateProcessTicketInputs(REQUEST);
     }
 
     expect(runFunc).toThrow(ArgumentError);

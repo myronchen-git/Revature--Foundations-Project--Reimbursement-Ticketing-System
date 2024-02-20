@@ -3,8 +3,13 @@ const express = require("express");
 
 const ticketService = require("../service/ticketService");
 const { authenticateTokenMiddleware } = require("../util/accountHelpers");
-const { validateNewTicketInputs, validateGetTicketsInputs } = require("../util/ticketHelpers");
+const {
+  validateNewTicketInputs,
+  validateGetTicketsInputs,
+  validateProcessTicketInputs,
+} = require("../util/ticketHelpers");
 const AuthorizationError = require("../errors/AuthorizationError");
+const ArgumentError = require("../errors/ArgumentError");
 
 const router = express.Router();
 
@@ -42,6 +47,35 @@ router.get("/", authenticateTokenMiddleware, validationMiddleware, async (req, r
   }
 });
 
+/**
+ * Updates a ticket
+ */
+router.patch(
+  "/:submitter-:timestamp",
+  authenticateTokenMiddleware,
+  validationMiddleware,
+  async (req, res) => {
+    try {
+      const UPDATED_TICKET = await ticketService.processTicket(req.body);
+      res.status(200).json({ message: `Ticket successfully processed.`, ticket: UPDATED_TICKET });
+    } catch (err) {
+      if (
+        err instanceof ArgumentError ||
+        err instanceof AuthorizationError ||
+        err.name === "ConditionalCheckFailedException"
+      ) {
+        logger.error(`ticketRouter -> /${req.body.submitter}-${req.body.timestamp}: ${err}`);
+        res.status(err.status).json({ message: err.message });
+      } else {
+        logger.error(
+          `ticketRouter -> /${req.body.submitter}-${req.body.timestamp}: Internal Server Error\n${err}`
+        );
+        res.status(500).json({ message: "Server error." });
+      }
+    }
+  }
+);
+
 // --------------------------------------------------
 
 /**
@@ -49,10 +83,14 @@ router.get("/", authenticateTokenMiddleware, validationMiddleware, async (req, r
  */
 function validationMiddleware(req, res, next) {
   try {
-    if (req.method === "POST") {
-      req.body = validateNewTicketInputs(req.body);
-    } else if (req.method === "GET") {
-      req.body = validateGetTicketsInputs(req);
+    if (req.path === "/") {
+      if (req.method === "POST") {
+        req.body = validateNewTicketInputs(req.body);
+      } else if (req.method === "GET") {
+        req.body = validateGetTicketsInputs(req);
+      }
+    } else if (req.method === "PATCH") {
+      req.body = validateProcessTicketInputs(req);
     }
 
     next();

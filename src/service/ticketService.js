@@ -79,9 +79,47 @@ async function retrieveTickets(getTicketsInfo) {
   return RETRIEVED_TICKETS;
 }
 
+/**
+ * Approves or denies a ticket if the user is a manager and if the ticket's status is pending.
+ *
+ * @param {Object} processTicketInfo Object containing user info, ticket primary keys, and new status.
+ * All are required.
+ * @returns The updated Ticket object.
+ */
+async function processTicket(processTicketInfo) {
+  logger.info(`ticketService.processTicket(${JSON.stringify(processTicketInfo)})`);
+
+  if (processTicketInfo.role !== "manager") {
+    logger.error(
+      `ticketService.processTicket: ${processTicketInfo.username} does not have a role of manager.`
+    );
+
+    throw new AuthorizationError(
+      `Account with username ${processTicketInfo.username} can not process tickets.  ` +
+        `Only accounts with role of manager can.`
+    );
+  }
+
+  let props = Object.keys(processTicketInfo).reduce((props, infoKey) => {
+    if (infoKey.toLowerCase() !== "username" && infoKey.toLowerCase() !== "role") {
+      props[infoKey] = processTicketInfo[infoKey];
+    }
+    return props;
+  }, {});
+  props.resolver = processTicketInfo.username;
+
+  const UPDATED_TICKET = await ticketDao.setTicketStatus(props);
+
+  logger.info(
+    `ticketService.processTicket: New updated ticket is Ticket<${JSON.stringify(UPDATED_TICKET)}>.`
+  );
+  return UPDATED_TICKET;
+}
+
 // ==================================================
 
 module.exports = {
   submitTicket,
   retrieveTickets,
+  processTicket,
 };

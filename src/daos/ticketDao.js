@@ -1,6 +1,6 @@
 const logger = require("../util/logger");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
-const { DynamoDBDocumentClient, PutCommand } = require("@aws-sdk/lib-dynamodb");
+const { DynamoDBDocumentClient, PutCommand, UpdateCommand } = require("@aws-sdk/lib-dynamodb");
 
 const client = new DynamoDBClient({ region: "us-west-1" });
 const documentClient = DynamoDBDocumentClient.from(client);
@@ -76,9 +76,54 @@ async function getTickets(props) {
   return data.Items;
 }
 
+/**
+ * Updates the status and the resolver of a ticket in the database, if the ticket status is pending.
+ *
+ * @param {Object} props The properties to use in the DynamoDB update command {submitter, timestamp, status, resolver}.
+ * @returns The updated Ticket {submitter, timestamp, status, type, amount, description}.
+ * @throws  ConditionalCheckFailedException if ticket status is not pending.
+ */
+async function setTicketStatus(props) {
+  logger.info(`ticketDao.setTicketStatus(${JSON.stringify(props)})`);
+
+  const COMMAND = new UpdateCommand({
+    TableName: TABLE_NAME,
+    Key: {
+      submitter: props.submitter,
+      timestamp: props.timestamp,
+    },
+    ConditionExpression: "#s = :pending",
+    UpdateExpression: "SET #s = :s, resolver = :r",
+    ExpressionAttributeNames: { "#s": "status" },
+    ExpressionAttributeValues: { ":pending": "pending", ":s": props.status, ":r": props.resolver },
+    ReturnValues: "ALL_NEW",
+    ReturnValuesOnConditionCheckFailure: "ALL_OLD",
+  });
+
+  let data;
+  try {
+    data = await documentClient.send(COMMAND);
+  } catch (err) {
+    logger.error(
+      `ticketDao.setTicketStatus: ${err}\nCurrent ticket info: ${JSON.stringify(err.Item)}.`
+    );
+    throw err;
+  }
+  const UPDATED_TICKET = data.Attributes;
+
+  logger.info(
+    `ticketDao.setTicketStatus: Ticket status updated, new ticket is ${JSON.stringify(
+      UPDATED_TICKET
+    )}.`
+  );
+
+  return UPDATED_TICKET;
+}
+
 // ==================================================
 
 module.exports = {
   add,
   getTickets,
+  setTicketStatus,
 };
