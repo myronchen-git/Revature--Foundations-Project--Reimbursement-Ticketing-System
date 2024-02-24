@@ -6,6 +6,7 @@ const authToken = require("../util/authToken");
 
 MAX_USERNAME_LENGTH = 40;
 MAX_PASSWORD_LENGTH = 200;
+const ROLES = new Set(["employee", "manager"]);
 
 // ==================================================
 
@@ -97,6 +98,7 @@ function authenticateTokenMiddleware(req, res, next) {
 // ==================================================
 
 module.exports = {
+  ROLES,
   sanitizeUsername,
   validatePassword,
   authenticateTokenMiddleware,

@@ -2,6 +2,7 @@ const logger = require("./util/logger");
 const express = require("express");
 
 const accountRouter = require("./controller/accountRouter");
+const ticketRouter = require("./controller/ticketRouter");
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use((req, res, next) => {
 });
 
 app.use("/accounts", accountRouter);
+app.use("/tickets", ticketRouter);
 
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}.`);
