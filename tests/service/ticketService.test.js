@@ -38,13 +38,12 @@ describe("submitTicket", () => {
     ticketToAdd.role = ROLE1;
 
     const EXPECTED_RESULT = {
-      id: expect.any(String),
-      status: STATUS,
       submitter: UN1,
+      timestamp: expect.any(Number),
+      status: STATUS,
       type: TYPE,
       amount: AMOUNT,
       description: DESCRIPTION,
-      timestamp: expect.any(Number),
     };
 
     const RESULT = await ticketService.submitTicket(ticketToAdd);

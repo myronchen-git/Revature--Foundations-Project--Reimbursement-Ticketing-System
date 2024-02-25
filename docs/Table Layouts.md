@@ -22,18 +22,26 @@ Foundations_Project-ERS-Tickets
 
 ### Partition Key
 
-- String id
+- String submitter
+
+### Sort key
+
+- Number timestamp
 
 ### Attributes
 
 - String status
-- String submitter
-- String resolver
 - String type
 - Number amount
 - String description
-- Number timestamp
+- String resolver
 
 ### Global Secondary Index(es)
 
-- String submitter (project all)
+#### Partition Key
+
+- String status (project all)
+
+#### Sort key
+
+- Number timestamp

@@ -1,5 +1,4 @@
 const logger = require("../util/logger");
-const crypto = require("crypto");
 
 const ticketDao = require("../daos/ticketDao");
 const AuthorizationError = require("../errors/AuthorizationError");
@@ -11,7 +10,7 @@ const AuthorizationError = require("../errors/AuthorizationError");
  *
  * @param {Object} submittedTicketInfo Sanitized user inputs for creating a new ticket:
  * {username, role, type, amount, description}.
- * @returns The ticket object {id, status, submitter, type, amount, description, timestamp} that was added,
+ * @returns The ticket object {submitter, timestamp, status, type, amount, description} that was added,
  * containing the same attributes that the database has.
  */
 async function submitTicket(submittedTicketInfo) {
@@ -19,13 +18,12 @@ async function submitTicket(submittedTicketInfo) {
 
   if (submittedTicketInfo.role === "employee") {
     const SUBMITTED_TICKET = await ticketDao.add({
-      id: crypto.randomUUID(),
-      status: "pending",
       submitter: submittedTicketInfo.username,
+      timestamp: Date.now(),
+      status: "pending",
       type: submittedTicketInfo.type,
       amount: submittedTicketInfo.amount,
       description: submittedTicketInfo.description,
-      timestamp: Date.now(),
     });
 
     logger.info(

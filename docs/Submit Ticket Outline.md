@@ -19,7 +19,7 @@
 > **File:** `ticketService.js`  
 > **Function:** `submitTicket`  
 > **Parameters:** `username`, `role`, `type`, `amount`, `description`  
-> **Returns:** ticket object `{id, status, submitter, type, amount, description, timestamp}`  
+> **Returns:** ticket object `{submitter, timestamp, status, type, amount, description}`  
 > **Throws:** `AuthorizationError` if account role is not employee
 >
 > If role is `employee`, then sends all ticket info to tickets DAO to be saved. Then returns a ticket object.  
@@ -29,15 +29,7 @@
 
 > **File:** `ticketDao.js`  
 > **Function:** `add`  
-> **Parameters:** `id`, `status`, `submitter`, `type`, `amount`, `description`, `timestamp`  
-> **Returns:** Ticket object `{id, status, submitter, type, amount, description, timestamp}` or null
+> **Parameters:** `submitter`, `timestamp`, `status`, `type`, `amount`, `description`  
+> **Returns:** Ticket object `{submitter, timestamp, status, type, amount, description}` or null
 >
 > Adds an entry in the `tickets` table with all arguments.
-
-> (Wasn't needed in the end, but could be used in another feature.)  
-> **File:** `ticketDao.js`  
-> **Function:** `get`  
-> **Parameters:** `id`  
-> **Returns:** Ticket object `{id, status, submitter, type, amount, description, timestamp}` or undefined
->
-> Retrieves a ticket from the database, using the ID.

@@ -11,7 +11,7 @@ const tableName = "Foundations_Project-ERS-Tickets";
 /**
  * Adds a ticket entry into the database, if the ticket ID does not already exist.
  *
- * @param {Object} ticket The ticket to add: {id, status, submitter, type, amount, description, timestamp}.
+ * @param {Object} ticket The ticket to add: {submitter, timestamp, status, type, amount, description}.
  * @returns The ticket that was saved or null.
  */
 async function add(ticket) {
@@ -42,37 +42,8 @@ async function add(ticket) {
   return SUCCESS ? ticket : null;
 }
 
-/**
- * Retrieves the ticket with the provided ID from the database.
- *
- * @param {String} id The ID of the ticket to get.
- * @returns Ticket object {id, status, submitter, type, amount, description, timestamp} or undefined.
- */
-async function get(id) {
-  logger.info(`ticketDao.get(${id})`);
-
-  const command = new GetCommand({
-    TableName: tableName,
-    Key: { id },
-  });
-
-  let data;
-  try {
-    data = await documentClient.send(command);
-  } catch (err) {
-    logger.error(err);
-    throw err;
-  }
-
-  const TICKET = data.Item;
-
-  logger.info(`ticketDao.get: Ticket<${JSON.stringify(TICKET)}>`);
-  return TICKET;
-}
-
 // ==================================================
 
 module.exports = {
   add,
-  get,
 };
