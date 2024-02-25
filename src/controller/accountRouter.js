@@ -6,6 +6,7 @@ const accountService = require("../service/accountService");
 const { sanitizeUsername, validatePassword } = require("../util/accountHelpers");
 const RegisteringExistingUsernameError = require("../errors/RegisteringExistingUsernameError");
 const AccountError = require("../errors/AccountError");
+const InvalidLoginError = require("../errors/InvalidLoginError");
 
 const router = express.Router();
 
@@ -31,6 +32,28 @@ router.post("/register", validationMiddleware, async (req, res) => {
       res.status(err.status).json({ message: err.message });
     } else {
       logger.error(`accountRouter -> /register: Internal Server Error\n${err}`);
+      res.status(500).json({ message: "Internal Server Error." });
+    }
+  }
+});
+
+/**
+ * Log in account
+ */
+router.post("/login", validationMiddleware, async (req, res) => {
+  try {
+    const AUTH_TOKEN = await accountService.login(req.body.username, req.body.password);
+
+    logger.info(
+      `accountRouter -> /login: "${req.body.username}" successfully logged in and is given ${AUTH_TOKEN}`
+    );
+    res.status(200).json({ message: "Successfully logged in.", authToken: AUTH_TOKEN });
+  } catch (err) {
+    if (err instanceof InvalidLoginError) {
+      logger.error(`accountRouter -> /login: ${err.message}`);
+      res.status(err.status).json({ message: "Incorrect username or password." });
+    } else {
+      logger.error(`accountRouter -> /login: Internal Server Error\n${err}`);
       res.status(500).json({ message: "Internal Server Error." });
     }
   }

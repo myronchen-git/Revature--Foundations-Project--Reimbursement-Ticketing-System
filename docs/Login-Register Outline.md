@@ -41,3 +41,30 @@
 > **Returns:** { `username`, `role` } or null
 >
 > Adds a new account to database.
+
+## Login
+
+### Controller Layer -
+
+> **File:** `AccountRouter.js`  
+> **URI:** /accounts/login  
+> **Method:** POST  
+> **Parameters:** `username`, `password`  
+> **Returns:**
+>
+> - `200` success: authentication token
+> - `400` user error: invalid username or password
+>
+> Routes API calls to core logic. Converts errors to HTTP responses.  
+> Checks that username and password arguments are valid inputs.
+
+### Service Layer -
+
+> **File:** `AccountService.js`  
+> **Function:** `login`  
+> **Parameters:** `username`, `password`  
+> **Returns:** authentication token  
+> **Throws:** `InvalidLoginError` for wrong username or password
+>
+> Checks if the provided username and password are correct by calling the database.
+> If correct, then returns a token that expires after an hour.

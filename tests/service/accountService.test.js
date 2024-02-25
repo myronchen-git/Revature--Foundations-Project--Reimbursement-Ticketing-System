@@ -5,6 +5,8 @@ const PW = "12345";
 
 const ROLE = "employee";
 
+const AUTH_TOKEN = "9999";
+
 // --------------------------------------------------
 
 const mockedGet = jest.fn((username) => {
@@ -21,8 +23,21 @@ jest.mock("../../src/daos/accountDao", () => ({
   add: mockedAdd,
 }));
 
+const mockedGenerate = jest.fn(() => AUTH_TOKEN);
+
+jest.mock("../../src/util/authToken", () => ({
+  generate: mockedGenerate,
+}));
+
+const mockedCompare = jest.fn((str1, str2) => str1 === str2);
+
+jest.mock("bcrypt", () => ({
+  compare: mockedCompare,
+}));
+
 const accountService = require("../../src/service/accountService");
 const RegisteringExistingUsernameError = require("../../src/errors/RegisteringExistingUsernameError");
+const InvalidLoginError = require("../../src/errors/InvalidLoginError");
 
 // ==================================================
 
@@ -50,5 +65,46 @@ describe("register", () => {
     expect(runFunc).rejects.toThrow(RegisteringExistingUsernameError);
     expect(mockedGet).toHaveBeenCalled();
     expect(mockedAdd).not.toHaveBeenCalled();
+  });
+});
+
+// --------------------------------------------------
+
+describe("login", () => {
+  test("Giving correct login info should return an authentication token.", async () => {
+    const EXPECTED_RESULT = AUTH_TOKEN;
+
+    const result = await accountService.login(UN2, PW);
+
+    expect(result).toEqual(EXPECTED_RESULT);
+    expect(mockedGet).toHaveBeenCalled();
+    expect(mockedCompare).toHaveBeenCalled();
+    expect(mockedGenerate).toHaveBeenCalled();
+  });
+
+  test("Giving a non-existing username should throw an error.", async () => {
+    const username = "PhonyUsername";
+
+    async function runFunc() {
+      await accountService.login(username, PW);
+    }
+
+    expect(runFunc).rejects.toThrow(InvalidLoginError);
+    expect(mockedGet).toHaveBeenCalled();
+    expect(mockedCompare).not.toHaveBeenCalled();
+    expect(mockedGenerate).not.toHaveBeenCalled();
+  });
+
+  test("Giving an incorrect password should throw an error.", async () => {
+    const password = "0000";
+
+    async function runFunc() {
+      await accountService.login(UN2, password);
+    }
+
+    expect(runFunc).rejects.toThrow(InvalidLoginError);
+    expect(mockedGet).toHaveBeenCalled();
+    expect(mockedCompare).not.toHaveBeenCalled();
+    expect(mockedGenerate).not.toHaveBeenCalled();
   });
 });
