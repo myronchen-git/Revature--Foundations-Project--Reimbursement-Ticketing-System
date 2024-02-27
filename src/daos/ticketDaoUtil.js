@@ -68,7 +68,11 @@ function constructGetTicketsCommand(props) {
     COMMAND_OBJECT["ExpressionAttributeValues"] = EXPRESSION_ATTRIBUTE_VALUES;
   }
 
-  logger.info(`Command argument is ${JSON.stringify(COMMAND_OBJECT)}.`);
+  logger.info(
+    `ticketDaoUtil.constructGetTicketsCommand: Command argument is ${JSON.stringify(
+      COMMAND_OBJECT
+    )}.`
+  );
 
   if (Object.keys(props).length !== 0) {
     return new QueryCommand(COMMAND_OBJECT);
