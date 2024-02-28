@@ -1,4 +1,5 @@
 const logger = require("./logger");
+const ArgumentError = require("../errors/ArgumentError");
 
 const authToken = require("../util/authToken");
 
@@ -16,7 +17,7 @@ const ROLES = new Set(["employee", "manager"]);
  *
  * @param {*} username A value of any type, representing a username.
  * @returns A sanitized username.
- * @throws Error if username is not valid.
+ * @throws ArgumentError if username is not valid.
  */
 function sanitizeUsername(username) {
   logger.info(`accountHelpers.sanitizeUsername(${username})`);
@@ -32,7 +33,7 @@ function sanitizeUsername(username) {
   }
 
   logger.error(`accountHelpers.sanitizeUsername: '${username}' is not a valid username.`);
-  throw new Error(
+  throw new ArgumentError(
     `Username is invalid.  Only alphanumeric characters are allowed and ` +
       `length has to be at most ${MAX_USERNAME_LENGTH} long.`
   );
@@ -43,7 +44,7 @@ function sanitizeUsername(username) {
  *
  * @param {*} password A value of any type, representing a password.
  * @returns A password String.
- * @throws Error if password is not valid.
+ * @throws ArgumentError if password is not valid.
  */
 function validatePassword(password) {
   logger.info(`accountHelpers.validatePassword((password))`);
@@ -55,7 +56,7 @@ function validatePassword(password) {
   }
 
   logger.error(`accountHelpers.validatePassword: Password is not valid.`);
-  throw new Error(`Password is invalid.  Max length is ${MAX_PASSWORD_LENGTH}.`);
+  throw new ArgumentError(`Password is invalid.  Max length is ${MAX_PASSWORD_LENGTH}.`);
 }
 
 /**

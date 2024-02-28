@@ -22,6 +22,7 @@ const {
   validatePassword,
   authenticateTokenMiddleware,
 } = require("../../src/util/accountHelpers");
+const ArgumentError = require("../../src/errors/ArgumentError");
 
 // ==================================================
 
@@ -48,7 +49,7 @@ describe("sanitizeUsername", () => {
       sanitizeUsername(USERNAME);
     }
 
-    expect(runFunc).toThrow(Error);
+    expect(runFunc).toThrow(ArgumentError);
   });
 
   test("Having a username that is too long should throw an error.", () => {
@@ -58,7 +59,7 @@ describe("sanitizeUsername", () => {
       sanitizeUsername(USERNAME);
     }
 
-    expect(runFunc).toThrow(Error);
+    expect(runFunc).toThrow(ArgumentError);
   });
 
   test("Giving no username should throw an error.", () => {
@@ -68,7 +69,7 @@ describe("sanitizeUsername", () => {
       sanitizeUsername(USERNAME);
     }
 
-    expect(runFunc).toThrow(Error);
+    expect(runFunc).toThrow(ArgumentError);
   });
 });
 
@@ -80,7 +81,7 @@ describe("validatePassword", () => {
       validatePassword(PW);
     }
 
-    expect(runFunc).not.toThrow(Error);
+    expect(runFunc).not.toThrow(ArgumentError);
   });
 
   test("Giving a number for password should not throw an error.", () => {
@@ -90,7 +91,7 @@ describe("validatePassword", () => {
       validatePassword(PW);
     }
 
-    expect(runFunc).not.toThrow(Error);
+    expect(runFunc).not.toThrow(ArgumentError);
   });
 
   test("Giving a password that is too long should throw an error.", () => {
@@ -100,7 +101,7 @@ describe("validatePassword", () => {
       validatePassword(PASSWORD);
     }
 
-    expect(runFunc).toThrow(Error);
+    expect(runFunc).toThrow(ArgumentError);
   });
 
   test("Giving no password should throw an error.", () => {
@@ -110,7 +111,7 @@ describe("validatePassword", () => {
       validatePassword();
     }
 
-    expect(runFunc).toThrow(Error);
+    expect(runFunc).toThrow(ArgumentError);
   });
 });
 
