@@ -1,9 +1,27 @@
-const { sanitizeUsername, validatePassword } = require("../../src/util/accountHelpers");
+const UN = "user1";
+const PW = "12345";
+const ROLE = "employee";
+const TOKEN = "jd8ck3";
 
 // --------------------------------------------------
 
-const UN = "user1";
-const PW = "12345";
+const mockedDecode = jest.fn((token) => {
+  if (token === TOKEN) {
+    return { username: UN, role: ROLE };
+  } else {
+    throw new Error();
+  }
+});
+
+jest.mock("../../src/util/authToken", () => ({
+  decode: mockedDecode,
+}));
+
+const {
+  sanitizeUsername,
+  validatePassword,
+  authenticateTokenMiddleware,
+} = require("../../src/util/accountHelpers");
 
 // ==================================================
 
@@ -93,5 +111,56 @@ describe("validatePassword", () => {
     }
 
     expect(runFunc).toThrow(Error);
+  });
+});
+
+// --------------------------------------------------
+
+describe("authenticateTokenMiddleware", () => {
+  let mockedStatus;
+  let mockedJson;
+  let mockedNext;
+  let res;
+
+  beforeEach(() => {
+    mockedStatus = jest.fn(() => res);
+    mockedJson = jest.fn();
+    mockedNext = jest.fn();
+
+    res = { status: mockedStatus, json: mockedJson };
+  });
+
+  test("Giving a valid token should return an object containing username and role.", () => {
+    const REQ = { headers: { authorization: "Bearer jd8ck3" }, body: {} };
+    const EXPECTED_REQ_BODY = { username: UN, role: ROLE };
+
+    authenticateTokenMiddleware(REQ, res, mockedNext);
+
+    expect(REQ.body).toStrictEqual(EXPECTED_REQ_BODY);
+    expect(mockedStatus).not.toHaveBeenCalled();
+    expect(mockedJson).not.toHaveBeenCalled();
+    expect(mockedNext).toHaveBeenCalled();
+  });
+
+  test("Giving a missing authorization header should return a 4xx response.", () => {
+    const REQ = { headers: {}, body: {} };
+    const EXPECTED_REQ_BODY = {};
+
+    authenticateTokenMiddleware(REQ, res, mockedNext);
+
+    expect(REQ.body).toStrictEqual(EXPECTED_REQ_BODY);
+    expect(mockedStatus).toHaveBeenCalledWith(401);
+    expect(mockedJson).toHaveBeenCalled();
+  });
+
+  test("Giving an invalid token should return a 4xx response.", () => {
+    const REQ = { headers: { authorization: "Bearer 12345" }, body: {} };
+    const EXPECTED_REQ_BODY = {};
+
+    authenticateTokenMiddleware(REQ, res, mockedNext);
+
+    expect(REQ.body).toStrictEqual(EXPECTED_REQ_BODY);
+    expect(mockedStatus).toHaveBeenCalledWith(401);
+    expect(mockedJson).toHaveBeenCalled();
   });
 });

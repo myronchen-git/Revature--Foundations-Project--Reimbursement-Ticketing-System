@@ -18,8 +18,19 @@ function generate(payload) {
   return jwt.sign(payload, KEY, { expiresIn: TOKEN_EXPIRATION_TIME });
 }
 
+/**
+ * Returns the encrypted payload or throws an Error if the JSON web token is invalid.
+ * @param {String} token The JSON web token containing username and role.
+ * @returns Object with username and role.
+ * @throws Error if JSON web token is invalid.
+ */
+function decode(token) {
+  return jwt.verify(token, KEY);
+}
+
 // ==================================================
 
 module.exports = {
   generate,
+  decode,
 };
