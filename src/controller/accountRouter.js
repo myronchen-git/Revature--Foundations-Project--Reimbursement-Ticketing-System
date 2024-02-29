@@ -50,7 +50,7 @@ router.post("/login", validationMiddleware, async (req, res) => {
     res.status(200).json({ message: "Successfully logged in.", authToken: AUTH_TOKEN });
   } catch (err) {
     if (err instanceof InvalidLoginError) {
-      logger.error(`accountRouter -> /login: ${err.message}`);
+      logger.error(`accountRouter -> /login: ${err}`);
       res.status(err.status).json({ message: "Incorrect username or password." });
     } else {
       logger.error(`accountRouter -> /login: Internal Server Error\n${err}`);
@@ -68,6 +68,7 @@ function validationMiddleware(req, res, next) {
     req.body.password = validatePassword(req.body.password);
     next();
   } catch (err) {
+    logger.error(`accountRouter.validationMiddleware: Validation failed.`);
     res.status(400).json({ message: err.message });
   }
 }

@@ -96,7 +96,7 @@ function validationMiddleware(req, res, next) {
     next();
   } catch (err) {
     logger.error(`ticketRouter.validationMiddleware: Validation failed.`);
-    res.status(400).json({ message: err.message });
+    res.status(err.status).json({ message: err.message });
   }
 }
 
