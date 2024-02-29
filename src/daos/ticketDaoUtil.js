@@ -1,11 +1,7 @@
 const logger = require("../util/logger");
+const env = require("dotenv").config();
+
 const { QueryCommand, ScanCommand } = require("@aws-sdk/lib-dynamodb");
-
-// --------------------------------------------------
-
-const TABLE_NAME = "Foundations_Project-ERS-Tickets";
-const INDEX1 = "status-timestamp-index";
-const INDEX2 = "type-timestamp-index";
 
 // ==================================================
 
@@ -18,7 +14,7 @@ const INDEX2 = "type-timestamp-index";
 function constructGetTicketsCommand(props) {
   logger.info(`ticketDao.constructGetTicketsCommand(${JSON.stringify(props)})`);
 
-  const COMMAND_OBJECT = { TableName: TABLE_NAME };
+  const COMMAND_OBJECT = { TableName: process.env.TABLE_TICKETS_NAME };
   const FILTER_EXPRESSION = [];
   const EXPRESSION_ATTRIBUTE_NAMES = {};
   const EXPRESSION_ATTRIBUTE_VALUES = {};
@@ -39,7 +35,7 @@ function constructGetTicketsCommand(props) {
       EXPRESSION_ATTRIBUTE_VALUES[":type"] = props.type;
     }
   } else if (props.status) {
-    COMMAND_OBJECT["IndexName"] = INDEX1;
+    COMMAND_OBJECT["IndexName"] = process.env.TABLE_TICKETS_INDEX_1;
     COMMAND_OBJECT["KeyConditionExpression"] = "#s = :status";
     EXPRESSION_ATTRIBUTE_NAMES["#s"] = "status";
     EXPRESSION_ATTRIBUTE_VALUES[":status"] = props.status;
@@ -50,12 +46,12 @@ function constructGetTicketsCommand(props) {
       EXPRESSION_ATTRIBUTE_VALUES[":type"] = props.type;
     }
   } else if (props.type) {
-    COMMAND_OBJECT["IndexName"] = INDEX2;
+    COMMAND_OBJECT["IndexName"] = process.env.TABLE_TICKETS_INDEX_2;
     COMMAND_OBJECT["KeyConditionExpression"] = "#t = :type";
     EXPRESSION_ATTRIBUTE_NAMES["#t"] = "type";
     EXPRESSION_ATTRIBUTE_VALUES[":type"] = props.type;
   } else {
-    COMMAND_OBJECT["IndexName"] = INDEX1;
+    COMMAND_OBJECT["IndexName"] = process.env.TABLE_TICKETS_INDEX_1;
   }
 
   if (FILTER_EXPRESSION.length !== 0) {

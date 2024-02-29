@@ -1,10 +1,10 @@
+const env = require("dotenv").config();
+
+// ==================================================
+
 const UN1 = "user1";
 const STATUS = "pending";
 const TYPE = "insurance";
-
-const TABLE_NAME = "Foundations_Project-ERS-Tickets";
-const INDEX1 = "status-timestamp-index";
-const INDEX2 = "type-timestamp-index";
 
 const QC = "QueryCommand";
 const SC = "ScanCommand";
@@ -28,8 +28,8 @@ describe("constructGetTicketsCommand", () => {
     const PROPS = {};
     const EXPECTED_RESULT_OBJECT_TYPE = SC;
     const EXPECTED_COMMAND_OBJECT = {
-      TableName: TABLE_NAME,
-      IndexName: INDEX1,
+      TableName: process.env.TABLE_TICKETS_NAME,
+      IndexName: process.env.TABLE_TICKETS_INDEX_1,
     };
 
     const RESULT = tickatDao.constructGetTicketsCommand(PROPS);
@@ -47,7 +47,7 @@ describe("constructGetTicketsCommand", () => {
       const PROPS = { submitter: UN1 };
       const EXPECTED_RESULT_OBJECT_TYPE = QC;
       const EXPECTED_COMMAND_OBJECT = {
-        TableName: TABLE_NAME,
+        TableName: process.env.TABLE_TICKETS_NAME,
         KeyConditionExpression: "submitter = :submitter",
         ExpressionAttributeValues: { ":submitter": UN1 },
       };
@@ -63,13 +63,13 @@ describe("constructGetTicketsCommand", () => {
 
   test(
     "Passing properties that only includes status should return " +
-      `a QueryCommand object that uses the ${INDEX1}.`,
+      `a QueryCommand object that uses the ${process.env.TABLE_TICKETS_INDEX_1}.`,
     () => {
       const PROPS = { status: STATUS };
       const EXPECTED_RESULT_OBJECT_TYPE = QC;
       const EXPECTED_COMMAND_OBJECT = {
-        TableName: TABLE_NAME,
-        IndexName: INDEX1,
+        TableName: process.env.TABLE_TICKETS_NAME,
+        IndexName: process.env.TABLE_TICKETS_INDEX_1,
         KeyConditionExpression: "#s = :status",
         ExpressionAttributeNames: { "#s": "status" },
         ExpressionAttributeValues: { ":status": STATUS },
@@ -86,13 +86,13 @@ describe("constructGetTicketsCommand", () => {
 
   test(
     "Passing properties that only includes type should return " +
-      `a QueryCommand object that uses the ${INDEX2}.`,
+      `a QueryCommand object that uses the ${process.env.TABLE_TICKETS_INDEX_2}.`,
     () => {
       const PROPS = { type: TYPE };
       const EXPECTED_RESULT_OBJECT_TYPE = QC;
       const EXPECTED_COMMAND_OBJECT = {
-        TableName: TABLE_NAME,
-        IndexName: INDEX2,
+        TableName: process.env.TABLE_TICKETS_NAME,
+        IndexName: process.env.TABLE_TICKETS_INDEX_2,
         KeyConditionExpression: "#t = :type",
         ExpressionAttributeNames: { "#t": "type" },
         ExpressionAttributeValues: { ":type": TYPE },
@@ -109,13 +109,13 @@ describe("constructGetTicketsCommand", () => {
 
   test(
     "Passing properties that includes status, and type should return " +
-      `a QueryCommand object that uses the ${INDEX1}.`,
+      `a QueryCommand object that uses the ${process.env.TABLE_TICKETS_INDEX_1}.`,
     () => {
       const PROPS = { status: STATUS, type: TYPE };
       const EXPECTED_RESULT_OBJECT_TYPE = QC;
       const EXPECTED_COMMAND_OBJECT = {
-        TableName: "Foundations_Project-ERS-Tickets",
-        IndexName: INDEX1,
+        TableName: process.env.TABLE_TICKETS_NAME,
+        IndexName: process.env.TABLE_TICKETS_INDEX_1,
         KeyConditionExpression: "#s = :status",
         FilterExpression: "#t = :type",
         ExpressionAttributeNames: { "#s": "status", "#t": "type" },
@@ -141,7 +141,7 @@ describe("constructGetTicketsCommand", () => {
       const PROPS = { submitter: UN1, status: STATUS, type: TYPE };
       const EXPECTED_RESULT_OBJECT_TYPE = QC;
       const EXPECTED_COMMAND_OBJECT = {
-        TableName: "Foundations_Project-ERS-Tickets",
+        TableName: process.env.TABLE_TICKETS_NAME,
         KeyConditionExpression: "submitter = :submitter",
         FilterExpression: "#s = :status AND #t = :type",
         ExpressionAttributeNames: { "#s": "status", "#t": "type" },

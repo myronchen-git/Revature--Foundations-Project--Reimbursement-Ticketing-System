@@ -1,10 +1,11 @@
 const logger = require("../util/logger");
+const env = require("dotenv").config();
+
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, GetCommand, PutCommand } = require("@aws-sdk/lib-dynamodb");
 
-const client = new DynamoDBClient({ region: "us-west-1" });
+const client = new DynamoDBClient({ region: process.env.REGION });
 const documentClient = DynamoDBDocumentClient.from(client);
-const tableName = "Foundations_Project-Accounts";
 
 const AccountError = require("../errors/AccountError");
 
@@ -20,7 +21,7 @@ async function get(username) {
   logger.info(`accountDao.get("${username}")`);
 
   const COMMAND = new GetCommand({
-    TableName: tableName,
+    TableName: process.env.TABLE_ACCOUNTS_NAME,
     Key: { username },
   });
 
@@ -50,7 +51,7 @@ async function add(username, password, role) {
   logger.info(`accountDao.add(${username}, ${password}, ${role})`);
 
   const COMMAND = new PutCommand({
-    TableName: tableName,
+    TableName: process.env.TABLE_ACCOUNTS_NAME,
     Item: { username, password, role },
     ConditionExpression: "attribute_not_exists(username)",
   });

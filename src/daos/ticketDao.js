@@ -1,15 +1,13 @@
 const logger = require("../util/logger");
+const env = require("dotenv").config();
+
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, PutCommand, UpdateCommand } = require("@aws-sdk/lib-dynamodb");
 
-const client = new DynamoDBClient({ region: "us-west-1" });
+const client = new DynamoDBClient({ region: process.env.REGION });
 const documentClient = DynamoDBDocumentClient.from(client);
 
 const { constructGetTicketsCommand } = require("./ticketDaoUtil");
-
-// --------------------------------------------------
-
-const TABLE_NAME = "Foundations_Project-ERS-Tickets";
 
 // ==================================================
 
@@ -23,7 +21,7 @@ async function add(ticket) {
   logger.info(`ticketDao.add(${JSON.stringify(ticket)})`);
 
   const command = new PutCommand({
-    TableName: TABLE_NAME,
+    TableName: process.env.TABLE_TICKETS_NAME,
     Item: ticket,
     ConditionExpression: "attribute_not_exists(id)",
   });
@@ -87,7 +85,7 @@ async function setTicketStatus(props) {
   logger.info(`ticketDao.setTicketStatus(${JSON.stringify(props)})`);
 
   const COMMAND = new UpdateCommand({
-    TableName: TABLE_NAME,
+    TableName: process.env.TABLE_TICKETS_NAME,
     Key: {
       submitter: props.submitter,
       timestamp: props.timestamp,
