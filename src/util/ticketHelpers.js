@@ -46,7 +46,7 @@ function validateNewTicketInputs(submittedTicketInfo) {
 /**
  * Sanitizes, formats, and validates the info for getting tickets.  Query parameters are optional.
  *
- * @param {Object} req Request Object with user info in the body and query parameters:
+ * @param {Request} req Request Object with user info in the body and query parameters:
  * {body: {username, role}, query: {status, type, submitter}}.
  * @returns A new Object to be used to query tickets from the database {username, role, status, type, submitter}.
  */
