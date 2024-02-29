@@ -64,7 +64,7 @@ router.patch(
         res.status(err.status).json({ message: err.message });
       } else if (err.name === "ConditionalCheckFailedException") {
         logger.error(`ticketRouter -> /${req.body.submitter}-${req.body.timestamp}: ${err}`);
-        res.status(400).json({ message: err.message });
+        res.status(400).json({ message: err.message, currentTicket: err.Item });
       } else {
         logger.error(
           `ticketRouter -> /${req.body.submitter}-${req.body.timestamp}: Internal Server Error\n${err}`
