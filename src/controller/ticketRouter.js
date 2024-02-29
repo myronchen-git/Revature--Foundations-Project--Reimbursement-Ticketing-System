@@ -59,12 +59,15 @@ router.patch(
       const UPDATED_TICKET = await ticketService.processTicket(req.body);
       res.status(200).json({ message: `Ticket successfully processed.`, ticket: UPDATED_TICKET });
     } catch (err) {
-      if (err instanceof ArgumentError || err instanceof AuthorizationError) {
+      if (
+        err instanceof ArgumentError ||
+        err instanceof AuthorizationError ||
+        err.name === "ConditionalCheckFailedException"
+      ) {
         logger.error(`ticketRouter -> /${req.body.submitter}-${req.body.timestamp}: ${err}`);
-        res.status(err.status).json({ message: err.message });
-      } else if (err.name === "ConditionalCheckFailedException") {
-        logger.error(`ticketRouter -> /${req.body.submitter}-${req.body.timestamp}: ${err}`);
-        res.status(400).json({ message: err.message, currentTicket: err.Item });
+        res
+          .status(err.status || err.$metadata.httpStatusCode)
+          .json({ message: err.message, currentTicket: err.Item });
       } else {
         logger.error(
           `ticketRouter -> /${req.body.submitter}-${req.body.timestamp}: Internal Server Error\n${err}`
