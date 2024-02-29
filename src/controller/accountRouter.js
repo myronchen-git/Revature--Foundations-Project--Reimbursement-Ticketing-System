@@ -25,7 +25,9 @@ router.post("/register", validationMiddleware, async (req, res) => {
     const ACCOUNT = await accountService.register(req.body.username, HASHED_PASSWORD);
 
     logger.info(`accountRouter -> /register: Created account ${JSON.stringify(ACCOUNT)}.`);
-    res.status(200).json({ message: `${ACCOUNT.username} successfully registered.`, ACCOUNT });
+    res
+      .status(200)
+      .json({ message: `${ACCOUNT.username} successfully registered.`, account: ACCOUNT });
   } catch (err) {
     if (err instanceof RegisteringExistingUsernameError || err instanceof AccountError) {
       logger.error(`accountRouter -> /register: ${err}`);
